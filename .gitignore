@@ -2,6 +2,9 @@
 *.o
 *.mod
 
+# auto-generated code
+lib/physics/physics_cap.F90
+
 # Cython c-output
 *.c
 
