@@ -1,0 +1,1 @@
+../ccpp-physics/physics/gfs_phy_tracer_config.F
