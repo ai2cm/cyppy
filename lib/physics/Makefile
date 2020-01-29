@@ -1,14 +1,15 @@
-
+include ../configure.fv3.gnu_docker
 
 CAP_SRC = physics_cap.F90
 LIBRARY  = libccpp.a
 SHARED_LIBRARY = libccpp.so
-FFLAGS += -fPIC -g
+FFLAGS += -fPIC -g -cpp
+CPPDEFS += -DCTYPES -DCCPP
 
-SRCS_f = h2ophys.f
-SRCS_F = machine.F sfc_ocean.F
-SRCS_f90 = funcphys.f90
-SRCS_F90 = physcons.F90
+SRCS_f = $(shell ls *.f)
+SRCS_F = $(shell ls *.F)
+SRCS_f90 = $(shell ls *.f90)
+SRCS_F90 = $(shell ls *.F90)
 
 
 DEPEND_FILES = $(SRCS_f) $(SRCS_f90) $(SRCS_F) $(SRCS_F90)
