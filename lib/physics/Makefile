@@ -1,4 +1,4 @@
-include ../configure.fv3.gnu_docker
+include ../conf/configure.fv3
 
 CAP_SRC = physics_cap.F90
 LIBRARY  = libccpp.a
