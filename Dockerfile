@@ -50,4 +50,4 @@ RUN cp $LIB_DIR/conf/$configure_file \
 
 RUN cd $LIB_DIR && make
 
-CMD ["bash", "pip install -e /cyppy"]
+CMD ["bash"]
