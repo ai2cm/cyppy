@@ -1,10 +1,8 @@
 include ../conf/configure.fv3
 
-CAP_SRC = physics_cap.F90
 LIBRARY  = libccpp.a
-SHARED_LIBRARY = libccpp.so
-FFLAGS += -fPIC -g -cpp
-CPPDEFS += -DCTYPES -DCCPP
+FFLAGS += -fPIC -cpp
+CPPDEFS += -DCTYPES -DCCPP -DNEMS_GSM
 
 SRCS_f = $(shell ls *.f)
 SRCS_F = $(shell ls *.F)
@@ -22,17 +20,14 @@ OBJS_c   = $(SRCS_c:.c=.o)
 
 OBJS = $(OBJS_f) $(OBJS_f90) $(OBJS_F) $(OBJS_F90) $(OBJS_c)
 
-all default: depend $(SHARED_LIBRARY)
+all default: depend $(LIBRARY)
 
 $(LIBRARY): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 
-$(SHARED_LIBRARY): $(CAP_SRC) $(LIBRARY)
-	$(FC) -shared $(FFLAGS) -o $@ $^
-
 .PHONY: clean
 clean:
-	@echo "Cleaning gfsphysics  ... "
+	@echo "Cleaning physics  ... "
 	@echo
 	$(RM) -f $(LIBRARY) *__genmod.f90 *.o */*.o *.mod *.i90 *.lst *.i depend */*.tmp.f90
 

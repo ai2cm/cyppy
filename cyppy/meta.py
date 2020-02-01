@@ -9,6 +9,32 @@ ENTRY_HEADER = '[ccpp-arg-table]'
 INTENT_VALUES = ('in', 'out', 'inout')
 BOOL_VALUES = ('T', 'F')
 
+# These derived types will not be loaded, and shemes using them will also be ignored.
+# This is because we haven't implemented wrapping/packing/unpacking these types yet.
+IGNORED_TYPES = [
+    # these types contain non-pointer array attributes
+    'GFS_control_type',
+    'GFS_data_type',
+    'GFS_init_type',
+    'topfsw_type',
+    'topflw_type',
+    'sfcfsw_type',
+    'sfcflw_type',
+    # these are all other GFS containers, disabled to test non-packing routines only
+    'GFS_statein_type',
+    'GFS_stateout_type',
+    'GFS_sfcprop_type',
+    'GFS_coupling_type',
+    'GFS_grid_type',
+    'GFS_tbd_type',
+    'GFS_cldprop_type',
+    'GFS_radtend_type',
+    'GFS_diag_type',
+    'GFS_interstitial_type',
+    # need to implement special wrapping for character type
+    'character',
+]
+
 BaseRoutine = namedtuple("Routine", ["name", "args", "internal_args", "types"])
 
 
@@ -47,11 +73,45 @@ Attribute = namedtuple(
 CCPPMetadata = namedtuple("CCPPMetadata", ["modules", "schemes", "types"])
 
 
-def get_scheme_module(module_name, scheme_list):
-    routine_list = []
-    for routine in iterate_routines(scheme_list):
-        routine_list.append(routine)
-    return Module(name=module_name, members=tuple(routine_list))
+def remove_ignored_schemes(schemes):
+    return_list = []
+    for scheme in schemes:
+        for routine in scheme.init, scheme.run, scheme.finalize:
+            if ignore_routine(routine):
+                break
+        else:
+            return_list.append(scheme)
+    return tuple(return_list)
+
+
+def remove_ignored_derived_types(derived_types):
+    return tuple([
+        ddt for ddt in derived_types if ddt.name not in IGNORED_TYPES
+    ])
+
+
+def remove_ignored_members(members):
+    return_list = []
+    for member in members:
+        if hasattr(member, 'args') and ignore_routine(member):
+            pass
+        elif member.name in IGNORED_TYPES:
+            pass
+        else:
+            return_list.append(member)
+    return tuple(return_list)
+
+
+def ignore_routine(routine):
+    for arg in routine.internal_args[:-2]:  # don't consider errmsg, errflg
+        if arg.type in IGNORED_TYPES:
+            return True
+    return False
+
+
+def get_scheme_module(scheme):
+    members = (scheme.init, scheme.run, scheme.finalize)
+    return Module(name=scheme.name, members=members)
 
 
 def get_module_name(filename):
@@ -112,7 +172,6 @@ def validate_dimensions(value, arg_name):
 
 
 def get_argument(arg_name, data):
-    print(arg_name)
     validate(data['intent'], arg_name, 'intent', INTENT_VALUES)
     validate(data['optional'], arg_name, 'optional', BOOL_VALUES)
     validate_dimensions(data['dimensions'], arg_name)
@@ -192,18 +251,19 @@ def load_meta(filenames):
                     **routine_dict
                 )
             )
-        module_list.append(get_scheme_module(file_module_name, scheme_list))
+            module_list.append(get_scheme_module(scheme_list[-1]))
     scheme_list = [expand_scheme_derived_args(scheme, type_list) for scheme in scheme_list]
     print([t.name for t in type_list])
     return CCPPMetadata(
         modules=consolidate_modules(module_list),
-        schemes=tuple(scheme_list),
-        types=tuple(type_list),
+        schemes=remove_ignored_schemes(scheme_list),
+        types=remove_ignored_derived_types(type_list),
     )
 
 
 def consolidate_modules(modules):
-    """Combine any modules with the same name and remove empty modules."""
+    """Combine any modules with the same name, remove empty modules, and
+    remove ignored types."""
     module_dict = collections.defaultdict(list)
     for module in modules:
         if isinstance(module.members, str):
@@ -216,7 +276,7 @@ def consolidate_modules(modules):
         members = []
         for module in modules_to_combine:
             members.extend(module.members)
-        members = deduplicate_tuple(members)
+        members = remove_ignored_members(deduplicate_tuple(members))
         if len(members) > 0:
             return_modules.append(
                 Module(

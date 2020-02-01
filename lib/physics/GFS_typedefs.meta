@@ -1,9 +1,4 @@
 [ccpp-arg-table]
-  name = GFS_init_type
-  type = ddt
-
-########################################################################
-[ccpp-arg-table]
   name = GFS_statein_type
   type = ddt
 [phii]
@@ -2697,12 +2692,6 @@
   units = index
   dimensions = ()
   type = integer
-[mom4ice]
-  standard_name = flag_for_mom4_coupling
-  long_name = flag controls mom4 sea ice
-  units = flag
-  dimensions = ()
-  type = logical
 [ras]
   standard_name = flag_for_ras_deep_convection
   long_name = flag for ras convection scheme

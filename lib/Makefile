@@ -1,41 +1,33 @@
+include ./conf/configure.fv3
 SHELL = /bin/sh
 
-TEMPLATES = $(shell ls *.F90 *.f90 *.f *.F)
+CAP_SRC = physics_cap.F90
+SHARED_LIBRARY = libccpp.so
+CCPP_DIR = ./physics
+CCPP_SRC = $(shell ls $(CCPP_DIR)/*.F90 $(CCPP_DIR)/*.f90 $(CCPP_DIR)/*.f $(CCPP_DIR)/*.F)
+CCPP_META = $(shell ls $(CCPP_DIR)/*.meta)
+CCPP_LIBRARY  = libccpp.a
 
-FFLAGS += \
-	-I$(FMS_DIR) \
-	-I$(FMS_DIR)/include \
-	-I$(FV3GFS_BUILD_DIR)/gfsphysics \
-	-I$(FV3GFS_BUILD_DIR)/ipd \
-	-I$(FV3GFS_BUILD_DIR)/cpl \
-	-I$(FV3GFS_BUILD_DIR)/io \
-	-I$(FV3GFS_BUILD_DIR)/atmos_cubed_sphere \
-	-I$(FV3GFS_BUILD_DIR)/ccpp/driver \
-	-I$(FV3GFS_BUILD_DIR)/../stochastic_physics \
-	-I$(FV3GFS_BUILD_DIR)
+FFLAGS += -fPIC -cpp -I./physics
+CPPDEFS += -DCTYPES -DCCPP
 
-.PHONY: clean cleanall
 
-all: coupler_lib.o dynamics_data.o physics_data.o $(TEMPLATES)
+all: $(SHARED_LIBRARY)
 
-dynamics_data.o: dynamics_data.F90 fortran_libs
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FPPFLAGS) $(FFLAGS) $(OTHERFLAGS) $(OTHER_FFLAGS) $(ESMF_INC) -c $< -o $@
+$(CAP_SRC): templates/$(CAP_SRC) $(CCPP_SRC) make_cap.py $(CCPP_META)
+	python3 make_cap.py
 
-physics_data.o: physics_data.F90 dynamics_data.o fortran_libs
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FPPFLAGS) $(FFLAGS) $(OTHERFLAGS) $(OTHER_FFLAGS) $(ESMF_INC) -c $< -o $@
+$(CCPP_DIR)/$(CCPP_LIBRARY): $(CCPP_SRC)
+	cd $(CCPP_DIR) && make
 
-coupler_lib.o: coupler_lib.F90 fortran_libs
-	$(FC) $(CPPDEFS) $(CPPFLAGS) $(FPPFLAGS) $(FFLAGS) $(OTHERFLAGS) $(OTHER_FFLAGS) $(ESMF_INC) -c $< -o $@
+$(SHARED_LIBRARY): $(CAP_SRC) $(CCPP_DIR)/$(CCPP_LIBRARY)
+	$(FC) -shared $(FFLAGS) -o $@ $^
 
 clean:
 	@echo "Cleaning ... "
-	$(RM) -f *.o *.mod *.lst depend $(TEMPLATES)
+	$(RM) -f *.o *.mod *.lst depend $(SHARED_LIBRARY) $(CAP_SRC)
 	$(MAKE) -C $(FV3GFS_BUILD_DIR) clean
 
-$(TEMPLATES): %: ../templates/% $(PROPERTIES_FILES)
-	python3 ../fill_templates.py $@
-
-fortran_libs:
-	#cd $(FV3GFS_BUILD_DIR) && make
-
 cleanall: clean
+
+.PHONY: clean cleanall
