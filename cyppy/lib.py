@@ -1,4 +1,5 @@
 import os
+import logging
 import ctypes
 import forge
 import numpy as np
@@ -96,6 +97,7 @@ def get_python_routine(routine):
     )
     def python_routine(**kwargs):
         fortran_args = []
+        logging.debug(f"calling routine {routine.name}")
         for signature in routine.args:
             if signature.name not in ('errmsg', 'errflg'):
                 arg = kwargs[signature.name]
@@ -107,7 +109,8 @@ def get_python_routine(routine):
                     raise NotImplementedError()
         f_routine(*fortran_args, ERRMSG, numpy_pointer(ERRFLG))
         if ERRFLG != 0:
-            raise CCPPError(ERRMSG)
+            raise CCPPError(f"{routine.name}: {ERRMSG}")
+        logging.debug(f"completed routine {routine.name}")
     python_routine.__name__ = routine.name
     return python_routine
 

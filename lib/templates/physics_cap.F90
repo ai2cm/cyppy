@@ -30,9 +30,9 @@ contains
         type({{ ddt.name }}), intent(out) :: ddt_out
 
     {% for attr in ddt.attrs %}
-        {% if attr.is_subarray or (attr.dimensions|length == 0) %}
+        {% if attr.dimensions|length == 0 %}
         ddt_out%{{ attr.name }} = {{ attr.standard_name }}
-        {% else %}
+        {% elif not attr.is_subarray %}
         ddt_out%{{ attr.name }} => {{ attr.standard_name }}
         {% endif %}
     {% endfor %}
@@ -47,7 +47,7 @@ contains
     {% endfor %}
 
     {% for attr in ddt.attrs %}
-        {% if attr.is_subarray or (attr.dimensions|length == 0) %}
+        {% if attr.dimensions|length == 0 %}
         {{ attr.standard_name }} = ddt_in%{{ attr.name }}
         {% endif %}
     {% endfor %}

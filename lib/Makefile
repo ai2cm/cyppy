@@ -14,7 +14,7 @@ CPPDEFS += -DCTYPES -DCCPP
 
 all: $(SHARED_LIBRARY)
 
-$(CAP_SRC): templates/$(CAP_SRC) $(CCPP_SRC) make_cap.py $(CCPP_META)
+$(CAP_SRC): templates/$(CAP_SRC) $(CCPP_SRC) $(CCPP_META) make_cap.py ../cyppy/meta.py
 	python3 make_cap.py
 
 $(CCPP_DIR)/$(CCPP_LIBRARY): $(CCPP_SRC)

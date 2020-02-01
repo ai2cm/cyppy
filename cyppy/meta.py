@@ -1,9 +1,12 @@
 import configparser
+import logging
 import collections
 from collections import namedtuple
 from typing import Sequence, Dict, List
 import io
 import os
+
+logger = logging.getLogger('ccpp')
 
 ENTRY_HEADER = '[ccpp-arg-table]'
 INTENT_VALUES = ('in', 'out', 'inout')
@@ -16,20 +19,15 @@ IGNORED_TYPES = [
     'GFS_control_type',
     'GFS_data_type',
     'GFS_init_type',
+    # radtend and diag contain types like topfsw_type which are used as array types
+    'GFS_radtend_type',
+    'GFS_diag_type',
     'topfsw_type',
     'topflw_type',
     'sfcfsw_type',
     'sfcflw_type',
-    # these are all other GFS containers, disabled to test non-packing routines only
-    'GFS_statein_type',
-    'GFS_stateout_type',
-    'GFS_sfcprop_type',
-    'GFS_coupling_type',
-    'GFS_grid_type',
-    'GFS_tbd_type',
-    'GFS_cldprop_type',
-    'GFS_radtend_type',
-    'GFS_diag_type',
+    'cmpfsw_type',
+    # interstitial contains cmpfsw_type
     'GFS_interstitial_type',
     # need to implement special wrapping for character type
     'character',
@@ -253,7 +251,6 @@ def load_meta(filenames):
             )
             module_list.append(get_scheme_module(scheme_list[-1]))
     scheme_list = [expand_scheme_derived_args(scheme, type_list) for scheme in scheme_list]
-    print([t.name for t in type_list])
     return CCPPMetadata(
         modules=consolidate_modules(module_list),
         schemes=remove_ignored_schemes(scheme_list),
@@ -313,7 +310,7 @@ def load_module(config):
 
 
 def load_routine(config):
-    print(f"Loading routine {config['ccpp-arg-table']['name']}")
+    logger.debug(f"Loading routine {config['ccpp-arg-table']['name']}")
     arg_list = []
     for arg_name, data in config.items():
         if arg_name not in ('ccpp-arg-table', 'DEFAULT'):  # first item is header info

@@ -4,6 +4,7 @@
 
 # auto-generated code
 lib/physics_cap.F90
+depend
 
 # Cython c-output
 *.c
@@ -15,6 +16,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.a
 
 # IDE files
 .idea
