@@ -8,10 +8,10 @@
 	$(CPP) $(CPPFLAGS) $< > $*.f
 
 .f.o:
-	$(FC) $(FFLAGS) $(OTHER_FFLAGS) -c $< -o $@
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) $(OTHER_FFLAGS) -c $< -o $@
 
 .f90.o:
-	$(FC) $(FFLAGS) $(OTHER_FFLAGS) -c $< -o $@
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) $(OTHER_FFLAGS) -c $< -o $@
 
 .F.o:
 	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) $(OTHER_FFLAGS) -c $< -o $@
@@ -22,7 +22,7 @@
 .c.o:
 	$(CC) $(CPPDEFS) $(CPPFLAGS) $(CFLAGS) $(OTHERFLAGS) $(OTHER_CFLAGS) -c $< -o $@
 
-depend: $(DEPEND_FILES) makefile
+depend: $(DEPEND_FILES) Makefile
 	@echo "Building dependencies ..."
 	@ls -1 $(DEPEND_FILES) > Srcfiles
 	@echo "." > Filepath

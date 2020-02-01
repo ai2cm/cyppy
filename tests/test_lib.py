@@ -43,12 +43,3 @@ def test_sfc_ocean_run():
         tskin, cm, ch, prsl1, prslki, wet, wind, flag_iter,
         qsurf, cmm, chh, gflux, evap, hflx, ep
     )
-    print(qsurf)
-    print(cmm)
-    print(chh)
-    print(gflux)
-    print(evap)
-    print(hflx)
-    print(ep)
-
-    assert False

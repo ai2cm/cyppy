@@ -2,6 +2,9 @@
 *.o
 *.mod
 
+# auto-generated code
+lib/physics_cap.F90
+
 # Cython c-output
 *.c
 
@@ -12,6 +15,9 @@ __pycache__/
 
 # C extensions
 *.so
+
+# IDE files
+.idea
 
 # Distribution / packaging
 .Python

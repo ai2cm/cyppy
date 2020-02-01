@@ -2,7 +2,7 @@ import os
 import ctypes
 import forge
 import numpy as np
-from . import read_meta
+from . import meta
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,8 +11,8 @@ ERRLEN = 128
 
 libccpp = ctypes.cdll.LoadLibrary(os.path.join(FORTRAN_DIR, 'libccpp.so'))
 
-SCHEME_LIST = read_meta.load_meta_dir(FORTRAN_DIR)
-STANDARD_NAME_TO_NAME = read_meta.get_standard_name_to_name(SCHEME_LIST)
+CCPP_METADATA = meta.load_meta_dir(FORTRAN_DIR)
+STANDARD_NAME_TO_NAME = meta.get_standard_name_to_name(CCPP_METADATA)
 
 
 class CCPPError(Exception):
@@ -105,7 +105,6 @@ def get_python_routine(routine):
                     fortran_args.append(numpy_pointer(arg))
                 else:
                     raise NotImplementedError()
-        print(fortran_args)
         f_routine(*fortran_args, ERRMSG, numpy_pointer(ERRFLG))
         if ERRFLG != 0:
             raise CCPPError(ERRMSG)
@@ -113,5 +112,5 @@ def get_python_routine(routine):
     return python_routine
 
 
-for scheme in SCHEME_LIST:
+for scheme in CCPP_METADATA.schemes:
     locals().update(get_python_routines(scheme))
