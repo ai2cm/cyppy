@@ -7,12 +7,12 @@ from . import meta
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-FORTRAN_DIR = os.path.join(FILE_DIR, '../lib/test')
+LIB_DIR = os.path.join(FILE_DIR, '../lib')
 ERRLEN = 128
 
-libccpp = ctypes.cdll.LoadLibrary(os.path.join(FORTRAN_DIR, 'libccpp.so'))
+libccpp = ctypes.cdll.LoadLibrary(os.path.join(LIB_DIR, 'libccpp.so'))
 
-CCPP_METADATA = meta.load_meta_dir(FORTRAN_DIR)
+CCPP_METADATA = meta.load_meta_dir(LIB_DIR)
 STANDARD_NAME_TO_NAME = meta.get_standard_name_to_name(CCPP_METADATA)
 
 
