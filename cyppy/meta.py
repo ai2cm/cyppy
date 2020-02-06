@@ -33,22 +33,22 @@ IGNORED_TYPES = [
     'character',
 ]
 
-BaseRoutine = namedtuple("Routine", ["name", "args", "internal_args", "types"])
+_RoutineSpec = namedtuple("Routine", ["name", "args", "internal_args", "types"])
 
 
 # subclass to set default assumption that no derived types are used
-class Routine(BaseRoutine):
+class RoutineSpec(_RoutineSpec):
 
     def __new__(cls, name, args, internal_args=None, types=None):
         if internal_args is None:
             internal_args = args
         if types is None:
             types = ()
-        return super(Routine, cls).__new__(cls, name, args, internal_args, types)
+        return super(RoutineSpec, cls).__new__(cls, name, args, internal_args, types)
 
 
-Argument = namedtuple(
-    "Argument",
+ArgSpec = namedtuple(
+    "ArgSpec",
     [
         "name",
         "standard_name",
@@ -61,11 +61,11 @@ Argument = namedtuple(
         "optional"
     ]
 )
-Scheme = namedtuple("Scheme", ["name", "init", "run", "finalize"])
-Module = namedtuple("Module", ["name", "members"])
-DerivedDataType = namedtuple("DerivedDataType", ["name", "attrs"])
-Attribute = namedtuple(
-    "Attribute",
+SchemeSpec = namedtuple("SchemeSpec", ["name", "init", "run", "finalize"])
+ModuleSpec = namedtuple("ModuleSpec", ["name", "members"])
+DerivedDataTypeSpec = namedtuple("DerivedDataTypeSpec", ["name", "attrs"])
+AttributeSpec = namedtuple(
+    "AttributeSpec",
     ["name", "standard_name", "long_name", "units", "dimensions", "type", "kind"]
 )
 CCPPMetadata = namedtuple("CCPPMetadata", ["modules", "schemes", "types"])
@@ -109,7 +109,7 @@ def ignore_routine(routine):
 
 def get_scheme_module(scheme):
     members = (scheme.init, scheme.run, scheme.finalize)
-    return Module(name=scheme.name, members=members)
+    return ModuleSpec(name=scheme.name, members=members)
 
 
 def get_module_name(filename):
@@ -173,7 +173,7 @@ def get_argument(arg_name, data):
     validate(data['intent'], arg_name, 'intent', INTENT_VALUES)
     validate(data['optional'], arg_name, 'optional', BOOL_VALUES)
     validate_dimensions(data['dimensions'], arg_name)
-    return Argument(
+    return ArgSpec(
         name=arg_name,
         standard_name=data['standard_name'],
         long_name=data['long_name'],
@@ -188,7 +188,7 @@ def get_argument(arg_name, data):
 
 def get_attribute(name, data):
     validate_dimensions(data['dimensions'], name)
-    return Attribute(
+    return AttributeSpec(
         name=name,
         standard_name=data['standard_name'],
         long_name=data['long_name'],
@@ -199,8 +199,8 @@ def get_attribute(name, data):
     )
 
 
-def get_argument_from_attribute(attr: Attribute, intent: str, optional: bool) -> Argument:
-    return Argument(
+def get_argument_from_attribute(attr: AttributeSpec, intent: str, optional: bool) -> ArgSpec:
+    return ArgSpec(
         name=attr.name,
         standard_name=attr.standard_name,
         long_name=attr.long_name,
@@ -244,7 +244,7 @@ def load_meta(filenames):
         for scheme_name, routine_dict in scheme_dict.items():
             fill_missing_routines(scheme_name, routine_dict)
             scheme_list.append(
-                Scheme(
+                SchemeSpec(
                     name=scheme_name,
                     **routine_dict
                 )
@@ -276,7 +276,7 @@ def consolidate_modules(modules):
         members = remove_ignored_members(deduplicate_tuple(members))
         if len(members) > 0:
             return_modules.append(
-                Module(
+                ModuleSpec(
                     name=name,
                     members=members,
                 )
@@ -294,7 +294,7 @@ def load_type(config):
         if attr_name not in ('ccpp-arg-table', 'DEFAULT'):  # first item is header info
             attr_list.append(get_attribute(attr_name, data))
     ddt_name = config['ccpp-arg-table']['name']
-    ddt = DerivedDataType(
+    ddt = DerivedDataTypeSpec(
         name=ddt_name,
         attrs=tuple(attr_list),
     )
@@ -302,7 +302,7 @@ def load_type(config):
 
 
 def load_module(config):
-    return Module(
+    return ModuleSpec(
         name=config['ccpp-arg-table']['name'],
         members=tuple(get_attribute(k, v) for k, v in config.items()
                       if k not in ('ccpp-arg-table', 'DEFAULT'))
@@ -323,8 +323,8 @@ def load_routine(config):
     return routine
 
 
-def expand_scheme_derived_args(scheme: Scheme, derived_types: Sequence[DerivedDataType]) -> Scheme:
-    return Scheme(
+def expand_scheme_derived_args(scheme: SchemeSpec, derived_types: Sequence[DerivedDataTypeSpec]) -> SchemeSpec:
+    return SchemeSpec(
         name=scheme.name,
         init=expand_routine_derived_args(scheme.init, derived_types),
         run=expand_routine_derived_args(scheme.run, derived_types),
@@ -332,7 +332,7 @@ def expand_scheme_derived_args(scheme: Scheme, derived_types: Sequence[DerivedDa
     )
 
 
-def expand_routine_derived_args(routine: Routine, derived_types: Sequence[DerivedDataType]) -> Routine:
+def expand_routine_derived_args(routine: RoutineSpec, derived_types: Sequence[DerivedDataTypeSpec]) -> RoutineSpec:
     ddt_lookup = {ddt.name: ddt for ddt in derived_types}
     ddt_used = []
     expanded_args = expand_derived_args(routine.args, ddt_lookup, ddt_used)
@@ -345,9 +345,9 @@ def expand_routine_derived_args(routine: Routine, derived_types: Sequence[Derive
 
 
 def expand_derived_args(
-        args: Sequence[Argument],
-        ddt_lookup: Dict[str, DerivedDataType],
-        ddt_used: List[DerivedDataType]) -> List[Argument]:
+        args: Sequence[ArgSpec],
+        ddt_lookup: Dict[str, DerivedDataTypeSpec],
+        ddt_used: List[DerivedDataTypeSpec]) -> List[ArgSpec]:
     if len(args) == 0:
         return []
     elif args[0].type in ddt_lookup:

@@ -1,8 +1,4 @@
-"""
-This script takes jinja2 templates in `templates` and converts them into code files in `lib`.
-"""
 import jinja2
-import json
 import os
 import sys
 import collections
@@ -18,6 +14,7 @@ FORTRAN_DIR = os.path.join(LIB_DIR, 'physics')
 CAP_OUT_FILENAME = os.path.join(LIB_DIR, CAP_BASENAME)
 INTRINSIC_TYPES = ['integer', 'real', 'logical', 'complex', 'character']
 
+# name shortening is necessary to comply with fortran subroutine/variable name limits
 DO_SHORTEN_NAMES = True  # can be disabled to debug generated code if the names are hard to understand
 
 SHORTEN_NAMES = {

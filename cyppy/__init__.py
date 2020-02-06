@@ -1,2 +1,2 @@
-from .meta import load_meta, Scheme, Routine, Argument, CCPPMetadata, Module, DerivedDataType, Attribute
+from .meta import load_meta, SchemeSpec, RoutineSpec, ArgSpec, CCPPMetadata, ModuleSpec, DerivedDataTypeSpec, AttributeSpec
 from . import lib

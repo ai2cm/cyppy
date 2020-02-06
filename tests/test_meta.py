@@ -62,7 +62,7 @@ def assert_metadata_equal(result, target, filename=None):
   type = integer
 """,
             cyppy.CCPPMetadata(
-                modules=(cyppy.Module(name="machine", members=("kind_dyn", "kind_grid")),),
+                modules=(cyppy.ModuleSpec(name="machine", members=("kind_dyn", "kind_grid")),),
                 schemes=(),
                 types=()
             ),
@@ -91,7 +91,7 @@ def assert_metadata_equal(result, target, filename=None):
   optional = T""",
             cyppy.CCPPMetadata(
                 modules=(
-                    cyppy.Module(
+                    cyppy.ModuleSpec(
                         name='cires_ugwp',
                         members=(
                             'cires_ugwp_finalize',
@@ -101,7 +101,7 @@ def assert_metadata_equal(result, target, filename=None):
                     ),
                 ),
                 schemes=(
-                    cyppy.Scheme(
+                    cyppy.SchemeSpec(
                         name='cires_ugwp',
                         init=cyppy.Routine(
                             name='cires_ugwp_init',
@@ -110,7 +110,7 @@ def assert_metadata_equal(result, target, filename=None):
                         run=cyppy.Routine(
                             name='cires_ugwp_run',
                             args=(
-                                cyppy.Argument(
+                                cyppy.ArgSpec(
                                     name='me',
                                     standard_name='mpi_rank',
                                     long_name='MPI rank of current process',
@@ -121,7 +121,7 @@ def assert_metadata_equal(result, target, filename=None):
                                     intent='in',
                                     optional=False,
                                 ),
-                                cyppy.Argument(
+                                cyppy.ArgSpec(
                                     name='master',
                                     standard_name='mpi_root',
                                     long_name='MPI rank of master process',
@@ -169,7 +169,7 @@ def assert_metadata_equal(result, target, filename=None):
   optional = F""",
             cyppy.CCPPMetadata(
                 modules=(
-                    cyppy.Module(
+                    cyppy.ModuleSpec(
                         name='cires_ugwp',
                         members=(
                             'cires_ugwp_finalize',
@@ -179,12 +179,12 @@ def assert_metadata_equal(result, target, filename=None):
                     ),
                 ),
                 schemes=(
-                    cyppy.Scheme(
+                    cyppy.SchemeSpec(
                         name='cires_ugwp',
                         init=cyppy.Routine(
                             name='cires_ugwp_init',
                             args=(
-                                cyppy.Argument(
+                                cyppy.ArgSpec(
                                     name='me',
                                     standard_name='mpi_rank',
                                     long_name='MPI rank of current process',
@@ -200,7 +200,7 @@ def assert_metadata_equal(result, target, filename=None):
                         run=cyppy.Routine(
                             name='cires_ugwp_run',
                             args=(
-                                cyppy.Argument(
+                                cyppy.ArgSpec(
                                     name='me',
                                     standard_name='mpi_rank',
                                     long_name='MPI rank of current process',
@@ -234,14 +234,14 @@ def assert_metadata_equal(result, target, filename=None):
   type = ddt""",
             cyppy.CCPPMetadata(
                 modules=(
-                    cyppy.Module(
+                    cyppy.ModuleSpec(
                         name=None,
                         members=("GFS_init_type",),
                     ),
                 ),
                 schemes=(),
                 types=(
-                    cyppy.DerivedDataType(
+                    cyppy.DerivedDataTypeSpec(
                         name="GFS_init_type",
                         attrs=()),
                 )
@@ -261,17 +261,17 @@ def assert_metadata_equal(result, target, filename=None):
   kind = kind_phys""",
             cyppy.CCPPMetadata(
                 modules=(
-                    cyppy.Module(
+                    cyppy.ModuleSpec(
                         name=None,
                         members=("GFS_statein_type",),
                     ),
                 ),
                 schemes=(),
                 types=(
-                    cyppy.DerivedDataType(
+                    cyppy.DerivedDataTypeSpec(
                         name="GFS_statein_type",
                         attrs=(
-                            cyppy.Attribute(
+                            cyppy.AttributeSpec(
                                 name='phii',
                                 standard_name='geopotential_at_interface',
                                 long_name='geopotential at model layer interfaces',
@@ -346,7 +346,7 @@ def test_get_argument(
     data['intent'] = intent
     data['optional'] = optional_in
     result = cyppy.meta.get_argument(arg_name, data)
-    assert isinstance(result, cyppy.Argument)
+    assert isinstance(result, cyppy.ArgSpec)
     for attr_name, attr_value in base_arg_data.items():
         if attr_name not in ('dimensions', 'intent', 'optional'):
             assert getattr(result, attr_name) == attr_value
@@ -405,7 +405,7 @@ def test_get_attribute(
     data.update(base_attribute_data)
     data['dimensions'] = dimensions_in
     result = cyppy.meta.get_attribute(attribute_name, data)
-    assert isinstance(result, cyppy.Attribute)
+    assert isinstance(result, cyppy.AttributeSpec)
     for attr_name, attr_value in base_attribute_data.items():
         if attr_name != 'dimensions':
             assert getattr(result, attr_name) == attr_value
@@ -463,33 +463,33 @@ def test_get_dimensions(dimensions_in, dimensions_out):
     [
         pytest.param([], [], id="no_modules"),
         pytest.param(
-            [cyppy.Module(name='module', members=())],
+            [cyppy.ModuleSpec(name='module', members=())],
             [],
             id="one_empty_module"
         ),
         pytest.param(
-            [cyppy.Module(name='module', members=('member1',))],
-            [cyppy.Module(name='module', members=('member1',))],
+            [cyppy.ModuleSpec(name='module', members=('member1',))],
+            [cyppy.ModuleSpec(name='module', members=('member1',))],
             id="one_valid_module"
         ),
         pytest.param(
-            [cyppy.Module(name='module1', members=('member1',)),
-             cyppy.Module(name='module2', members=('member2',))],
-            [cyppy.Module(name='module1', members=('member1',)),
-             cyppy.Module(name='module2', members=('member2',))],
+            [cyppy.ModuleSpec(name='module1', members=('member1',)),
+             cyppy.ModuleSpec(name='module2', members=('member2',))],
+            [cyppy.ModuleSpec(name='module1', members=('member1',)),
+             cyppy.ModuleSpec(name='module2', members=('member2',))],
             id="two_different_modules"
         ),
         pytest.param(
-            [cyppy.Module(name='module1', members=('member1', 'member3')),
-             cyppy.Module(name='module2', members=('member2', 'member4'))],
-            [cyppy.Module(name='module1', members=('member1', 'member3')),
-             cyppy.Module(name='module2', members=('member2', 'member4'))],
+            [cyppy.ModuleSpec(name='module1', members=('member1', 'member3')),
+             cyppy.ModuleSpec(name='module2', members=('member2', 'member4'))],
+            [cyppy.ModuleSpec(name='module1', members=('member1', 'member3')),
+             cyppy.ModuleSpec(name='module2', members=('member2', 'member4'))],
             id="two_longer_different_modules"
         ),
         pytest.param(
-            [cyppy.Module(name='module1', members=('member1', 'member3')),
-             cyppy.Module(name='module1', members=('member2', 'member4'))],
-            [cyppy.Module(
+            [cyppy.ModuleSpec(name='module1', members=('member1', 'member3')),
+             cyppy.ModuleSpec(name='module1', members=('member2', 'member4'))],
+            [cyppy.ModuleSpec(
                 name='module1',
                 members=('member1', 'member2', 'member3', 'member4')
             )],
@@ -505,7 +505,7 @@ def test_consolidate_modules(modules_in, modules_out):
 @pytest.mark.parametrize(
     "invalid_module",
     [
-        cyppy.Module(name='module1', members='member'),
+        cyppy.ModuleSpec(name='module1', members='member'),
     ]
 )
 def test_consolidate_modules_invalid_module(invalid_module):
@@ -515,7 +515,7 @@ def test_consolidate_modules_invalid_module(invalid_module):
 
 @pytest.fixture
 def not_ddt_arg():
-    return cyppy.Argument(
+    return cyppy.ArgSpec(
         name='me',
         standard_name='mpi_rank',
         long_name='MPI rank of current process',
@@ -530,7 +530,7 @@ def not_ddt_arg():
 
 @pytest.fixture
 def ddt_arg():
-    return cyppy.Argument(
+    return cyppy.ArgSpec(
         name='der',
         standard_name='derived_value',
         long_name='MPI rank of current process',
@@ -545,10 +545,10 @@ def ddt_arg():
 
 @pytest.fixture
 def ddt():
-    return cyppy.DerivedDataType(
+    return cyppy.DerivedDataTypeSpec(
         name='My_Type',
         attrs=(
-            cyppy.Attribute(
+            cyppy.AttributeSpec(
                 name='phii',
                 standard_name='geopotential_at_interface',
                 long_name='geopotential at model layer interfaces',
