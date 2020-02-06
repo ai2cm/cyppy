@@ -8,12 +8,12 @@ from . import meta
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 LIB_DIR = os.path.join(FILE_DIR, '../lib')
+META_DIR = os.path.join(LIB_DIR, 'physics')
 ERRLEN = 128
 
 libccpp = ctypes.cdll.LoadLibrary(os.path.join(LIB_DIR, 'libccpp.so'))
 
-CCPP_METADATA = meta.load_meta_dir(LIB_DIR)
-STANDARD_NAME_TO_NAME = meta.get_standard_name_to_name(CCPP_METADATA)
+CCPP_METADATA = meta.load_meta_dir(META_DIR)
 
 
 class CCPPError(Exception):
@@ -50,12 +50,20 @@ def check_dimensions(array, signature, arg_dict):
             f"{signature.dimensions}, but it has {len(array.shape)} dimensions"
         )
     for length, dim_name in zip(array.shape, signature.dimensions):
-        length_in_args = arg_dict[STANDARD_NAME_TO_NAME[dim_name]]
+        arg_index = find_arg_index(dim_name, signature.args)
+        length_in_args = arg_dict[arg_index]
         if length != length_in_args:
             raise CCPPError(
                 f"value for {signature.name} has a length of {length} for dimension "
                 f"{dim_name}, but a value of {length_in_args} was given for {dim_name}"
             )
+
+
+def find_arg_index(name, args):
+    for i, arg in enumerate(args):
+        if arg.name == name:
+            return i
+    raise ValueError(f"arg name {name} not found in argument list {[arg.name for arg in args]}")
 
 
 def check_type(array, signature):
@@ -90,8 +98,12 @@ def is_bool(dtype):
     return dtype == np.bool
 
 
+def get_fortran_routine(name):
+    getattr(libccpp, f"{name.lower()}_cap")
+
+
 def get_python_routine(routine):
-    f_routine = getattr(libccpp, f"{routine.name}_cap")
+    f_routine = get_fortran_routine(routine.name)
     @forge.sign(
         *[forge.pos(arg.name) for arg in routine.args[:-2]]  # skip errmsg, errflg args as we treat those internally
     )

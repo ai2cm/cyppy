@@ -18,6 +18,14 @@ RUN apt-get update && apt-get install -y \
     libopenmpi3 \
     bats
 
+# download and install NCEP libraries
+RUN git config --global http.sslverify false && \
+    git clone https://github.com/NCAR/NCEPlibs.git && \
+    mkdir /opt/NCEPlibs && \
+    cd NCEPlibs && \
+    git checkout 3da51e139d5cd731c9fc27f39d88cb4e1328212b && \
+    echo "y" | ./make_ncep_libs.sh -s linux -c gnu -d /opt/NCEPlibs -o 1
+
 ## Build CCPP
 ##---------------------------------------------------------------------------------
 FROM ccpp-environment AS ccpp
@@ -32,12 +40,13 @@ RUN apt-get update && apt-get install -y \
 ARG CYPPY_DIR=/cyppy
 ARG LIB_DIR=$CYPPY_DIR/lib
 
-COPY cyppy $CYPPY_DIR
+COPY requirements.txt $CYPPY_DIR/
+RUN pip install -r $CYPPY_DIR/requirements.txt
+
+COPY cyppy $CYPPY_DIR/cyppy
 COPY lib $LIB_DIR
 COPY tests $CYPPY_DIR/tests
-COPY setup.py README.rst HISTORY.rst requirements.txt $CYPPY_DIR/
-
-RUN pip install -r $CYPPY_DIR/requirements.txt
+COPY setup.py README.rst HISTORY.rst $CYPPY_DIR/
 
 ARG compile_option
 ARG configure_file=configure.fv3.gnu_docker
@@ -48,6 +57,8 @@ RUN cp $LIB_DIR/conf/$configure_file \
     if [ ! -z $compile_option ]; then sed -i "33i $compile_option" \
         $LIB_DIR/conf/configure.fv3; fi
 
-RUN cd $LIB_DIR && make
+RUN pip install -e /cyppy
+
+# RUN cd $LIB_DIR && make clean && make
 
 CMD ["bash"]

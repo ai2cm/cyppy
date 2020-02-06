@@ -20,13 +20,13 @@ $(CAP_SRC): templates/$(CAP_SRC) $(CCPP_SRC) $(CCPP_META) make_cap.py ../cyppy/m
 $(CCPP_DIR)/$(CCPP_LIBRARY): $(CCPP_SRC)
 	cd $(CCPP_DIR) && make
 
-$(SHARED_LIBRARY): $(CAP_SRC) $(CCPP_DIR)/$(CCPP_LIBRARY)
+$(SHARED_LIBRARY): $(CAP_SRC) $(CCPP_DIR)/$(CCPP_LIBRARY) $(NCEPLIBS)
 	$(FC) -shared $(FFLAGS) -o $@ $^
 
 clean:
 	@echo "Cleaning ... "
 	$(RM) -f *.o *.mod *.lst depend $(SHARED_LIBRARY) $(CAP_SRC)
-	$(MAKE) -C $(FV3GFS_BUILD_DIR) clean
+	$(MAKE) -C physics clean
 
 cleanall: clean
 

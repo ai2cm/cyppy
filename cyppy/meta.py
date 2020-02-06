@@ -148,7 +148,7 @@ def fill_missing_routines(scheme_name, routine_dict):
     'run' is already defined."""
     for optional_routine in 'init', 'finalize':
         if optional_routine not in routine_dict:
-            routine_dict[optional_routine] = Routine(
+            routine_dict[optional_routine] = RoutineSpec(
                 name=get_routine_name(scheme_name, optional_routine),
                 args=(),
             )
@@ -240,16 +240,16 @@ def load_meta(filenames):
                 module_list.append(load_module(config))
             elif config['ccpp-arg-table']['type'] == 'ddt':
                 type_list.append(load_type(config))
-        scheme_list = []
-        for scheme_name, routine_dict in scheme_dict.items():
-            fill_missing_routines(scheme_name, routine_dict)
-            scheme_list.append(
-                SchemeSpec(
-                    name=scheme_name,
-                    **routine_dict
-                )
+    scheme_list = []
+    for scheme_name, routine_dict in scheme_dict.items():
+        fill_missing_routines(scheme_name, routine_dict)
+        scheme_list.append(
+            SchemeSpec(
+                name=scheme_name,
+                **routine_dict
             )
-            module_list.append(get_scheme_module(scheme_list[-1]))
+        )
+        module_list.append(get_scheme_module(scheme_list[-1]))
     scheme_list = [expand_scheme_derived_args(scheme, type_list) for scheme in scheme_list]
     return CCPPMetadata(
         modules=consolidate_modules(module_list),
@@ -316,7 +316,7 @@ def load_routine(config):
         if arg_name not in ('ccpp-arg-table', 'DEFAULT'):  # first item is header info
             arg_list.append(get_argument(arg_name, data))
     routine_name = config['ccpp-arg-table']['name']
-    routine = Routine(
+    routine = RoutineSpec(
         name=routine_name,
         args=tuple(arg_list),
     )
@@ -336,7 +336,7 @@ def expand_routine_derived_args(routine: RoutineSpec, derived_types: Sequence[De
     ddt_lookup = {ddt.name: ddt for ddt in derived_types}
     ddt_used = []
     expanded_args = expand_derived_args(routine.args, ddt_lookup, ddt_used)
-    return Routine(
+    return RoutineSpec(
         name=routine.name,
         args=tuple(expanded_args),
         internal_args=routine.internal_args,
@@ -384,25 +384,3 @@ def iterate_routines(scheme_list):
     for scheme in scheme_list:
         for routine in scheme.init, scheme.run, scheme.finalize:
             yield routine
-
-
-def get_standard_name_to_name(ccpp_metadata: CCPPMetadata):
-    return_dict = {}
-    for routine in iterate_routines(ccpp_metadata.schemes):
-        for arg in routine.args:
-            _update_standard_name(return_dict, arg.standard_name, arg.name)
-    for module in ccpp_metadata.modules:
-        for member in module.members:
-            _update_standard_name(return_dict, member.standard_name, member.name)
-    return return_dict
-
-
-def _update_standard_name(d, standard_name, name):
-    if d.get(standard_name, name) != name:
-        raise ValueError(
-            f'conflicting values {name} and '
-            f'{d[standard_name]} given as variable names '
-            f'for {standard_name}'
-        )
-    else:
-        d[standard_name] = name
