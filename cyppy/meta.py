@@ -170,8 +170,8 @@ def validate_dimensions(value, arg_name):
 
 
 def get_argument(arg_name, data):
-    validate(data['intent'], arg_name, 'intent', INTENT_VALUES)
-    validate(data['optional'], arg_name, 'optional', BOOL_VALUES)
+    validate(data.get('intent'), arg_name, 'intent', INTENT_VALUES)
+    validate(data.get('optional'), arg_name, 'optional', BOOL_VALUES)
     validate_dimensions(data['dimensions'], arg_name)
     return ArgSpec(
         name=arg_name,
