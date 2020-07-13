@@ -88,7 +88,7 @@ SHORTEN_NAMES = {
     'type': 'typ',  # also need to replace reserved words
     'program': 'prgm',
     'real': 'rl',
-    'stop': 'stap',  # confusing but I don't think this appears in any standard names anyways
+    'stop': 'stopp',  # confusing but I don't think this appears in any standard names anyways
     'end': 'nd',
     'dimensionless': 'unitless',
     'dimension': 'dim',

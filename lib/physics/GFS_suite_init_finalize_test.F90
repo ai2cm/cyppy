@@ -1,1 +1,0 @@
-../ccpp-physics/physics/GFS_suite_init_finalize_test.F90
